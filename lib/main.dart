@@ -1,86 +1,39 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-void main() {
-  runApp(MyApp());
-}
+class FlutterSkyWayAndroid {
+  MethodChannel _channel = const MethodChannel('flu.gonosen.dev/skyway');
 
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-      ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
-
-  final String title;
-
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  // Get battery level.
-  String _batteryLevel = 'Unknown battery level.';
-  static const platform = const MethodChannel('samples.flutter.dev/battery');
-  String apiKey = "7087900e-91b9-44eb-b477-601292937668";
-  String domain = "localhost";
-
-  Future<void> _getBatteryLevel() async {
-    String batteryLevel;
-    try {
-      final int result = await platform.invokeMethod('getBatteryLevel');
-      batteryLevel = 'Battery level at $result % .';
-    } on PlatformException catch (e) {
-      batteryLevel = "Failed to get battery level: '${e.message}'.";
-    }
-
-    setState(() {
-      _batteryLevel = batteryLevel;
-    });
+  FlutterSkyWayAndroid() {
+    this._channel.setMethodCallHandler(_handleMethod);
   }
 
-  Future initConnectSkyWay() async {
-    String connectSkywyay;
+  Future<void> initSkyWay(String apiKey, String domain) async {
     try {
-      connectSkywyay = await platform
-          .invokeMethod('connectSkyway', {"API_KEY": apiKey, "DOMAIN": domain});
-      print(connectSkywyay);
+      final peerId = await _channel
+          .invokeMethod('connectSkyWay', {"API_KEY": apiKey, "DOMAIN": domain});
+      print(peerId);
     } on PlatformException catch (e) {
-      connectSkywyay = "Failed to get battery level: '${e.message}'.";
+      throw "Failed init connect skyWay: '${e.message}'.";
     }
   }
 
-  @override
-  void initState() {
-    super.initState();
-    initConnectSkyWay();
+  Future<String> callingSkyWay(String peerId) async {
+    String callState = "TERMINATE";
+    try {
+      callState = await _channel.invokeMethod('callingSkyWay', {
+        "PEERID": peerId,
+      });
+      print(callState);
+    } on PlatformException catch (e) {
+      throw "Failed calling SkyWay: '${e.message}'.";
+    }
+    return callState;
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            ElevatedButton(
-              child: Text('Get Battery Level'),
-              onPressed: _getBatteryLevel,
-            ),
-            Text(_batteryLevel),
-          ],
-        ),
-      ),
-    );
+  // Private function that gets called by ObjC/Java
+  Future<void> _handleMethod(MethodCall call) async {
+    if (call.method == "FlutterSkyWayAndroid#handleInComingCall") {
+      print("incoming call");
+    }
   }
 }
