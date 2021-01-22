@@ -102,6 +102,7 @@ public class MainActivity extends FlutterActivity {
                     Log.d("DDD", "[On/Error]" + error.getMessage());
                 });
 
+
             } else if (call.method.equals("connectSkyWay")) {
                 getPeerId(call.argument("API_KEY"), call.argument("DOMAIN"), result);
             } else if (call.method.equals("onReject")) {
